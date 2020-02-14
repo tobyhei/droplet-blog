@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -20,7 +19,9 @@ namespace tobyheighwaydotcom
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseUrls("http://*:5123").UseStartup<Startup>();
+                    var port = Environment.GetEnvironmentVariable("THDC_PORT");
+                    Console.WriteLine($"Binding to port {port}");
+                    webBuilder.UseUrls($"http://localhost:{port}").UseStartup<Startup>();
                 });
     }
 }

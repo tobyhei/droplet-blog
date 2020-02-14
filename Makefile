@@ -1,31 +1,24 @@
 DROPLET=root@165.22.240.46
 NAME=tobyheighwaydotcom
-BIN=bin/Release/netcoreapp3.1/linux-x64/publish
+export THDC_PORT=5555
 
-.PHONY: run deploy clean start-service test-start-service tail
+.PHONY: release local deploy clean start tail
 
-tobyheighwaydotcom:
-	dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true
-	cp ${BIN}/${NAME} .
+local:
+	dotnet run
 
-run: tobyheighwaydotcom
-	sudo ./${NAME}
+release:
+	dotnet publish -c Release
 
 deploy: clean
-	scp -r ./* ${DROPLET}:/root/workplace/tobyheighwaydotcom
+	scp -r ./* ${DROPLET}:/root/workplace/${NAME}
 
 clean:
 	git clean -fXd
 
-start-service: tobyheighwaydotcom
-	# configure and start nginx
-	sudo cp nginx.conf /etc/nginx/sites-available/default
-	sudo nginx -t 
-	sudo nginx -s reload
-
-	# copy binary
-	sudo mkdir -p /var/${NAME}
-	sudo cp -a ${NAME} /var/${NAME}/${NAME}
+start: release
+	# copy dlls
+	sudo cp -a bin/Release/netcoreapp3.1/publish /var/${NAME}/
 
 	# start supervisord
 	sudo cp ${NAME}.conf /etc/supervisor/conf.d/${NAME}.conf
@@ -33,9 +26,6 @@ start-service: tobyheighwaydotcom
 	sudo systemctl start supervisor
 	sudo service supervisor stop
 	sudo service supervisor start
-
-test-start-service: tobyheighwaydotcom
-	/usr/bin/supervisord
 
 tail:
 	tail -f /var/log/${NAME}.out.log
