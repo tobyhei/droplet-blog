@@ -1,9 +1,13 @@
 NAME=tobyheighwaydotcom
-export THDC_PORT=5555
 
 .PHONY: release local clean start tail
 
 start: release
+	# ensure db exists
+	sudo mkdir -p /var/lib/${NAME}
+	sudo touch /var/lib/${NAME}/database
+	sudo setfacl -m u:www-data:rwx /var/lib/tobyheighwaydotcom/database
+
 	# copy dlls
 	sudo cp -a bin/Release/netcoreapp3.1/publish /var/${NAME}/
 
@@ -15,7 +19,8 @@ start: release
 	sudo service supervisor start
 
 local:
-	dotnet run
+	# sudo for db access
+	sudo THDC_PORT=5555 dotnet run
 
 release:
 	dotnet publish -c Release
